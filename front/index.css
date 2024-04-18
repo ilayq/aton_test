@@ -1,0 +1,24 @@
+body{
+    font-weight: 500;
+}
+
+.data{
+    width: 500px;
+}
+
+#navbar ul{
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: left;
+}
+
+thead{
+    text-align: right;
+    font-size: 20px;
+}
+
+td {
+    text-align: right;
+}
