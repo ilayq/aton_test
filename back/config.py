@@ -9,11 +9,11 @@ currencies2finmarket_code = {
 }
 
 countries2currency_codes = {
-    "США": "USD",
-    "Великобритания": "GPB",
-    "Япония": "JPY",
-    "Индия": "INR",
-    "Турция": "TRY",
-    "Китай": "CNY",
-    "Германия": "EUR"
+    "USA": "USD",
+    "United Kingdoms": "GBP",
+    "Japan": "JPY",
+    "India": "INR",
+    "Turkey": "TRY",
+    "China": "CNY",
+    "Germany": "EUR"
 }

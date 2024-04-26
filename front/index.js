@@ -1,11 +1,27 @@
 const make_date_string = (date) => date.getFullYear() + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + ("0" + date.getDate()).slice(-2)
-
+const hex2base64 = (str) => btoa(String.fromCharCode.apply(null, str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" ")))
 const currency_rates_btn = document.getElementById("currency_rates")
 const currency_list_btn = document.getElementById("currency_list")
 const currency_plot_btn = document.getElementById("plot")
 const body = document.getElementsByTagName("body")[0]
 currency_list_btn.onclick = currency_list
 currency_rates_btn.onclick = currency_rates
+currency_plot_btn.onclick = currency_plot
+
+const string2date = (date) => {
+    var parts = date.split(".")
+    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+}
+
+function _arrayBufferToBase64( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+       binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+}
 
 const currency_codes = ["USD", "EUR", "GPB", "JPY", "TRY", "INR", "CNY"]
 
@@ -27,9 +43,11 @@ function default_view(){
     table.setAttribute("class", "data")
     const thead = document.createElement("thead")
     const tr_head = document.createElement("tr")
+    tr_head.scope = "row"
     col_names.forEach(element => {
         const el = document.createElement("th")
         el.textContent = element
+        el.scope = "col"
         tr_head.appendChild(el)
     });
     thead.appendChild(tr_head)
@@ -41,10 +59,11 @@ function default_view(){
         data => {
             for (var row of data){
                 const tr = document.createElement('tr')
+                tr.scope = "row"
                 for (var item in row){
                     const td = document.createElement('td')
                     td.textContent = row[item]
-                    td.setAttribute('align', 'right')
+                    td.scope = "col"
                     tr.appendChild(td)
                 }
                 tbody.appendChild(tr)
@@ -130,27 +149,23 @@ function currency_rates(){
         opt.textContent = elem
         currency_list.appendChild(opt)
     })
-    content_section.appendChild(currency_list)
+    const utils_div = document.createElement("div")
+    utils_div.appendChild(currency_list)
+    utils_div.id = "utils"
     const date_start_input = document.createElement("input")
     const date_end_input = document.createElement("input")
-    content_section.appendChild(date_start_input)
-    content_section.appendChild(date_end_input)
+    date_end_input.placeholder = "End of period"
+    date_start_input.placeholder = "Beginning of period"
+    utils_div.appendChild(date_start_input)
+    utils_div.appendChild(date_end_input)
     const show_btn = document.createElement("button")
     show_btn.textContent = "Show"
 
-    const string2date = (date) => {
-        var parts = date.split(".")
-        return new Date(parts[0], parts[1] - 1, parts[2])
-    }
+    
     
     show_btn.onclick = () => {
         const date_start = string2date(date_start_input.value)
         const date_end = string2date(date_end_input.value)
-
-        if (date_end - date_start > new Date(2) || date_start > date_end){
-            alert("Period must be lower than 2 years and date_start must be lower than date_end")
-            return
-        }
 
         const currency = currency_list.value
         const json = fetch(url + new URLSearchParams({
@@ -177,9 +192,109 @@ function currency_rates(){
         )
     }
 
-    content_section.appendChild(show_btn)
-    console.log("end")
+    utils_div.appendChild(show_btn)
+    content_section.append(utils_div)
 }
 
+function currency_plot(){
+    const url = "http://localhost:8000/api/plot"
+    const c = ["USA", "United Kingdoms", "Japan", "India", "Turkey", "China", "Germany"]
+    var content_section = document.getElementById("content")
+    if (content_section){
+        body.removeChild(content_section)
+    }
+    content_section = document.createElement("section")
+    content_section.id = "content"
+    body.appendChild(content_section)
+    const choice = document.createElement("div")
+    choice.id = "choice"
+    content_section.appendChild(choice)
+    let checkboxes = []
+    c.forEach( el => {
+        const label = document.createElement("label")
+        choice.appendChild(label)
+        const ch = document.createElement("input")
+        ch.type = "checkbox"
+        ch.id = el
+        label.appendChild(ch)
+        label.appendChild(document.createTextNode(el))
+        choice.appendChild(document.createElement("br"))
+        checkboxes.push(ch)
+    })
+
+    const date_start_input = document.createElement("input")
+    const date_end_input = document.createElement("input")
+    date_end_input.placeholder = "End of period"
+    date_start_input.placeholder = "Beginning of period"
+    choice.appendChild(date_start_input)
+    choice.appendChild(document.createElement("br"))
+    choice.appendChild(date_end_input)
+    choice.appendChild(document.createElement("br"))
+    const show_btn = document.createElement("button")
+    show_btn.textContent = "Show"
+    choice.appendChild(show_btn)
+
+    show_btn.onclick = () => {
+        const img_tag = document.getElementsByTagName("img")[0]
+        if (img_tag){
+            content_section.removeChild(img_tag)
+        }
+        let chosen_countries = []
+        checkboxes.forEach( el => {
+            if (el.checked){
+                chosen_countries.push(el.id)
+            }
+        })
+        if (chosen_countries.length === 0){
+            return
+        }
+
+        const date_start = make_date_string(string2date(date_start_input.value))
+        const date_end = make_date_string(string2date(date_end_input.value))
+        if (!date_start || !date_end)
+            return
+        plot(chosen_countries, date_start, date_end)
+    }
+
+    function plot(country_list, start_date, end_date){
+        const fetch_body = {
+            "countries": country_list,
+            "start_date": start_date,
+            "end_date": end_date
+        }
+        const data = fetch(
+            url, 
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json;charset=windows-1251",
+                    "Access-Control-Allow-Origin": "true"
+                },
+                body: JSON.stringify(fetch_body)
+            }
+        )
+        data.then(response => {
+            if (response.status != 200){
+                return
+            }
+            const img = document.createElement("img")
+            const reader = response.body.getReader();
+            let chunks = [];
+            
+            reader.read().then(function processText({done, value}) {
+                if (done) {
+                    const blob = new Blob(chunks, { type: 'image/png' });
+                    const imageURL = URL.createObjectURL(blob);
+                    img.src = imageURL;
+                } else {
+                    chunks.push(value);
+                    return reader.read().then(processText);
+                }
+            });
+            content_section.appendChild(img)
+        });
+    }
+
+}
 
 default_view()
