@@ -24,11 +24,6 @@ app.add_middleware(
 
 
 class Server:
-    @app.get('/')
-    def root():
-        return RedirectResponse('/docs')
-
-
     @app.post('/api/plot')
     async def build_plot(plot_data: PlotDTO) -> StreamingResponse:
         plot = Plot()

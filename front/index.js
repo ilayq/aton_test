@@ -26,7 +26,7 @@ function _arrayBufferToBase64( buffer ) {
 const currency_codes = ["USD", "EUR", "GPB", "JPY", "TRY", "INR", "CNY"]
 
 function default_view(){
-    const data_url = "http://80.76.32.10/api/data?"
+    const data_url = "http://127.0.0.1:8000/api/data?"
     const cur_date = new Date()
     const month_ago = cur_date
     month_ago.setMonth(month_ago.getMonth() - 1)
@@ -89,7 +89,7 @@ function default_view(){
 }
 
 function currency_list(){
-    const url = "http://80.76.32.10/api/currency"
+    const url = "http://127.0.0.1:8000/api/currency"
     const json = fetch(url).then(response => response.json())
     var content_section = document.getElementById("content")
     if (content_section){
@@ -131,7 +131,7 @@ function currency_list(){
 }
 
 function currency_rates(){
-    const url = "http://80.76.32.10/api/data?"
+    const url = "http://127.0.0.1:8000/api/data?"
     var content_section = document.getElementById("content")
     if (content_section){
         body.removeChild(content_section)
@@ -197,7 +197,7 @@ function currency_rates(){
 }
 
 function currency_plot(){
-    const url = "http://80.76.32.10/api/plot"
+    const url = "http://127.0.0.1:8000/api/plot"
     const c = ["USA", "United Kingdoms", "Japan", "India", "Turkey", "China", "Germany"]
     var content_section = document.getElementById("content")
     if (content_section){
